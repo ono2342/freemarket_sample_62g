@@ -1,6 +1,6 @@
 class ItemsController < ApplicationController
-  before_action :set_item, only: [:destroy, :buy]
-  before_action :set_detail, only: [:show, :edit, :update, :purchase, :comment]
+  before_action :set_detail, only: [:show, :edit, :update, :purchase, :comment, :buy, :done]
+  before_action :set_card, only: [:purchase, :buy, :done]
 
   def index
     @items = Item.includes(:items_statuses).page(params[:page]).per(20).order("created_at DESC")
@@ -83,6 +83,7 @@ class ItemsController < ApplicationController
   end
 
   def destroy
+    @item = Item.find(params[:id])
     if @item.destroy
       redirect_to (root_path)
     else
@@ -91,11 +92,7 @@ class ItemsController < ApplicationController
   end
 
   def purchase
-    @user = current_user
-    card = Card.where(user_id: current_user.id).first
-    Payjp.api_key = Rails.application.credentials.payjp[:PAYJP_PRIVATE_KEY]
-    customer = Payjp::Customer.retrieve(card.customer_id)
-    @default_card_information = customer.cards.retrieve(card.card_id)
+
   end
 
   def comment
@@ -108,21 +105,21 @@ class ItemsController < ApplicationController
   end
 
   def buy #クレジット購入
-    card = Card.find_by(user_id: current_user.id)
-    if card.blank?
+
+    if @card.blank?
       redirect_to controller: :cards, action: "new"
     else
-      status = @item.items_statuses
+      status = @detail.items_statuses
       Payjp.api_key = Rails.application.credentials.payjp[:PAYJP_PRIVATE_KEY]
       Payjp::Charge.create(
-        amount: @item.price, #支払金額
-        customer: card.customer_id, #顧客ID
+        amount: @detail.price, #支払金額
+        customer: @card.customer_id, #顧客ID
         currency: 'jpy', #日本円
       )# ↑商品の金額をamountへ、cardの顧客idをcustomerへ、currencyをjpyへ入れる
       if status.update(item_status: 2, buyer_id: current_user.id)
         redirect_to action: "done"
       else
-        # 購入ページにとどまる（仮
+        redirect_to action: "purchase"
       end
     end
   end
@@ -138,8 +135,12 @@ class ItemsController < ApplicationController
                                   delivery_attributes:[:id, :delivery_cost, :delivery_days, :delivery_ways])
   end
 
-  def set_item
-    @item = Item.find(params[:id])
+  def set_card
+    @user = current_user
+    @card = Card.find_by(user_id: current_user.id)
+    Payjp.api_key = Rails.application.credentials.payjp[:PAYJP_PRIVATE_KEY]
+    customer = Payjp::Customer.retrieve(@card.customer_id)
+    @default_card_information = customer.cards.retrieve(@card.card_id)
   end
 
   def set_detail
