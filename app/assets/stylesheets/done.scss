@@ -45,6 +45,9 @@
           margin: 0 auto;
           width: 55%;
 
+          img{
+            object-fit: cover;
+          }
         }
         &__name {
           padding: 10px 0 30px;

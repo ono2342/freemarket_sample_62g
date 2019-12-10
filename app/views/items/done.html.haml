@@ -12,34 +12,44 @@
         購入が完了しました
       .transaction-done-img
         .transaction-done-img__main
-          = image_tag 'fmarket_logo_red.svg', height:'36',weidth:'134'
-          -# 仮置き
+          = image_tag @detail.images[0],height:"200",width:"200"
+
         .transaction-done-img__name
-          商品名
-          -# 仮置き
+          = @detail.name
+
       .transaction-done-charge
         .transaction-done-charge__main
-          値段 
-          -# 仮置き
-          %span.transaction-done-charge__main__in
-            送料込み
+          = number_with_delimiter @detail.price
+          %span
+            円（税込）送料込み
       .transaction-done-delivery
         .transaction-done-delivery__content
           %h3.transaction-done-delivery__content__for
             配送先
-          .transaction-done-delivery__content__address
-            住所
-            -# 仮置き
+          .user-input-address
+            .purchase-zip_code
+              =@user.address.zip_code.to_s.insert(3, "-")
+            .purchase-address
+              =@user.address.prefecture.name
+              =@user.address.city
+              =@user.address.house_number
+              =@user.address.building_name
+
       .transaction-done-payment
         .transaction-done-payment__main
           %h3.transaction-done-payment__main__way
             支払い方法
-          %p.transaction-done-payment__main__info
-            カード情報
-            -# 仮置き
-          .transaction-done-payment__main__card__img
-            カードのimg
-            -# 仮置き
+          %p.method-of-payment__main__info
+            カード情報 
+          .method-of-payment__main__card__img
+            .card-number
+              = "**** **** **** " + @default_card_information.last4
+            .card-day
+              - exp_month = @default_card_information.exp_month.to_s
+              - exp_year = @default_card_information.exp_year.to_s.slice(2,3)
+              = exp_month + " / " + exp_year
+            .card-company
+              = image_tag "//www-mercari-jp.akamaized.net/assets/img/card/visa.svg?2356129156", alt: "", height: "20", width: "49"
       .transaction-done-bottom
         .transaction-done-bottom__main
           .transaction-done-bottom__main__flow
